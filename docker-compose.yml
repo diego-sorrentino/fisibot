@@ -1,0 +1,48 @@
+version: "3"
+
+services:
+  web:
+    container_name: web
+    build:
+      context: ./web/
+      dockerfile: Dockerfile
+    image: web:0.1
+    environment:
+      - WWW_PATH=${WWW_PATH}
+      - DNS_SERVER_NAME=${DNS_SERVER_NAME}
+      - CERT_PATH=${CERT_PATH}
+      - CERT_KEY_FILENAME=${CERT_KEY_FILENAME}
+      - CERT_PEM_FILENAME=${CERT_PEM_FILENAME}
+      - PHP_SERVER=${PHP_SERVER}
+    ports:
+      - "443:443"
+    depends_on:
+      - php
+    networks:
+      - net
+    volumes:
+      - "./app/:${WWW_PATH}:ro"
+    command: sh -c "envsubst < /etc/nginx/conf.d/virtualhost.template > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"
+    restart: always
+
+  php:
+    container_name: php
+    build:
+      context: ./php/
+      dockerfile: Dockerfile
+    image: app:0.1
+    environment:
+      - WWW_PATH=${WWW_PATH}
+      - BOT_USERNAME=${BOT_USERNAME}
+      - BOT_NAME=${BOT_NAME}
+      - BOT_TOKEN=${BOT_TOKEN}
+      - BOT_URL=${BOT_URL}
+    networks:
+      - net
+    volumes:
+      - "./app/:${WWW_PATH}:rw"
+    restart: always
+
+networks:
+  net:
+

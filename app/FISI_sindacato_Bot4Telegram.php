@@ -10,6 +10,7 @@ require_once 'settings/settings.php';
 
 function CmdToDo($Path, $IDChat, $Args = null){
 	error_log(__FUNCTION__);
+
 	$dataTODO= [
 		'chat_id' => $IDChat,
 		'text'	=> 'Comando non trovato. Premi / per i comandi attivi'
@@ -30,11 +31,12 @@ function ReplyWithMessage($Path, $IDChat, $Message){
 	);
 	
 	echo json_encode($parameters);
-
 }
 
 
 function CmdInfoPrivacy($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+
 	$message =<<<__START_MESSAGE__
 Questo bot non mantiene alcun dato privato su chi lo utilizza (almeno per adesso)
 __START_MESSAGE__;
@@ -42,8 +44,17 @@ __START_MESSAGE__;
 	ReplyWithMessage($Path, $IDChat, $message);
 }
 
+function CmdRegionalGroups($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+	
+	$data = yaml_parse_file('data/referee.yaml');
+	error_log(print_r($data, true));
+}
 
-$JSONRequest = json_decode(file_get_contents("php://input"), TRUE);
+
+$a = file_get_contents("php://input");
+error_log($a);
+$JSONRequest = json_decode($a, TRUE);
 
 if(DEBUG)
 	error_log(print_r($JSONRequest, true));
@@ -97,11 +108,11 @@ else{
 	}
 	$AvailableCommands = array(
 		'start'			=> 'CmdStart',
+		'gruppiregionali'	=> 'CmdRegionalGroups',
 		'privacy'		=> 'CmdInfoPrivacy',
 		'help'			=> 'CmdHelp',
 
 	);
-
 	$cmdFound = false;
 	foreach($AvailableCommands as $Cmd => $FuncName){
 		if(preg_match('@/' . $Cmd  . '@', $Command)){

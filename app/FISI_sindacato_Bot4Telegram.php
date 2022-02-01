@@ -47,14 +47,164 @@ __START_MESSAGE__;
 function CmdRegionalGroups($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
 	
-	$data = yaml_parse_file('data/referee.yaml');
-	error_log(print_r($data, true));
+	$data = yaml_parse_file('data/gruppiregionali.yaml');
+	$dataArray = $data['referenti']['regione'];
+	$nData = count($dataArray);
+	
+	$nCols = 2;
+	$nRows = ceil($nData / $nCols);
+	for($i = 0; $i < $nRows; $i++){
+		$Res[$i] = array();
+		for($j = 0; $j < $nCols; $j++){
+			$arrayID = $i + $j;
+			$dataName = $dataArray[$arrayID]['nome'];
+			if(null != $dataName){
+				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showregionalgroup-' . $arrayID);
+			}
+		}
+	}
+
+	$keyboard = ['inline_keyboard' => $Res ];
+
+	$message =<<<__MESSAGE__
+Scegli la regione
+__MESSAGE__;
+
+	$parameters = array(
+		'chat_id' => $IDChat, 
+		'reply_markup' => $keyboard,
+		"text" => $message,
+		"method" => "sendMessage",
+		'parse_mode' => 'HTML',
+	);
+
+	echo json_encode($parameters);
+}
+
+function CmdShowRegionalGroupRefers($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+	
+	$data = yaml_parse_file('data/gruppiregionali.yaml');
+	$regionArray = $data['referenti']['regione'][$Args];
+	
+	$message =<<<__MESSAGE__
+Regione: {$regionArray['nome']}
+Canale Telegram: https://t.me/{$regionArray['canale']}
+Referenti:
+
+__MESSAGE__;
+	foreach($regionArray['referente'] as $id => $name)
+		$message .= "- {$name}" . PHP_EOL;
+
+	ReplyWithMessage($Path, $IDChat, $message);
 }
 
 
-$a = file_get_contents("php://input");
-error_log($a);
-$JSONRequest = json_decode($a, TRUE);
+function CmdFAQS($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+	
+	$data = yaml_parse_file('data/faq.yaml');
+	$dataArray = $data['faqs']['comparto'];
+	$nData = count($dataArray);
+	
+	$nCols = 2;
+	$nRows = ceil($nData / $nCols);
+	for($i = 0; $i < $nRows; $i++){
+		$Res[$i] = array();
+		for($j = 0; $j < $nCols; $j++){
+			$arrayID = $i + $j;
+			$dataName = $dataArray[$arrayID]['nome'];
+			if(null != $dataName){
+				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showfaq-' . $arrayID);
+			}
+		}
+	}
+
+	$keyboard = ['inline_keyboard' => $Res ];
+
+	$message =<<<__MESSAGE__
+Scegli il comparto
+__MESSAGE__;
+
+	$parameters = array(
+		'chat_id' => $IDChat, 
+		'reply_markup' => $keyboard,
+		"text" => $message,
+		"method" => "sendMessage",
+		'parse_mode' => 'HTML',
+	);
+
+	echo json_encode($parameters);
+}
+
+function CmdShowFaq($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+	
+	$data = yaml_parse_file('data/faq.yaml');
+	$dataArray = $data['faqs']['comparto'][$Args];
+	
+	foreach($dataArray['faq'] as $id => $data)
+		$message[] =<<<__DATA__
+Faq n. {$data['numero']}
+Domanda: {$data['domanda']}
+Risposta: {$data['risposta']}
+
+__DATA__;
+
+	ReplyWithMessage($Path, $IDChat, implode(PHP_EOL, $message));
+}
+
+function CmdShowSubscribeModule($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+	
+	$data = yaml_parse_file('data/moduli.yaml');
+	$dataArray = $data['moduli']['comparto'][$Args];
+//TODO: Return message with PDF in attach	
+	$message =<<<__MESSAGE__
+Filename: {$dataArray['filename']}
+__MESSAGE__;
+
+	ReplyWithMessage($Path, $IDChat, $message);
+}
+
+function CmdSubscribe($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+	
+	$data = yaml_parse_file('data/moduli.yaml');
+	$dataArray = $data['moduli']['comparto'];
+	$nData = count($dataArray);
+	
+	$nCols = 2;
+	$nRows = ceil($nData / $nCols);
+	for($i = 0; $i < $nRows; $i++){
+		$Res[$i] = array();
+		for($j = 0; $j < $nCols; $j++){
+			$arrayID = $i + $j;
+			$dataName = $dataArray[$arrayID]['nome'];
+			if(null != $dataName){
+				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showmodule-' . $arrayID);
+			}
+		}
+	}
+
+	$keyboard = ['inline_keyboard' => $Res ];
+
+	$message =<<<__MESSAGE__
+Scegli il modulo
+__MESSAGE__;
+
+	$parameters = array(
+		'chat_id' => $IDChat, 
+		'reply_markup' => $keyboard,
+		"text" => $message,
+		"method" => "sendMessage",
+		'parse_mode' => 'HTML',
+	);
+
+	echo json_encode($parameters);
+}
+
+$JSONRequest = json_decode(file_get_contents("php://input"), TRUE);
 
 if(DEBUG)
 	error_log(print_r($JSONRequest, true));
@@ -69,23 +219,30 @@ $Path = $Telegram['bot']['api'] . $Telegram['bot']['token'];
 
 
 if(array_key_exists('message', $JSONRequest) && array_key_exists('contact', $JSONRequest['message'])){
-	$IDChat = $JSONRequest['message']["contact"]["user_id"];
-	$phoneNumber = $JSONRequest['message']["contact"]["phone_number"];
-
-	CmdSaveTelegramPhoneNumber($Path, $IDChat, $phoneNumber);
+//	$IDChat = $JSONRequest['message']["contact"]["user_id"];
+//	$phoneNumber = $JSONRequest['message']["contact"]["phone_number"];
+//
+//	CmdSaveTelegramPhoneNumber($Path, $IDChat, $phoneNumber);
 	
 }
 elseif(array_key_exists('callback_query', $JSONRequest)){
-//	$IDChat = $JSONRequest['callback_query']["message"]["chat"]["id"];
-//	$method = $JSONRequest['callback_query']['data'];
-//        if(preg_match('/showusrbyaggr-/', $method))
-//                CmdShowUsrsByAggrPresence($Path, $IDChat, preg_replace('/showusrbyaggr-/', '', $method));
-//
-//        if(preg_match('/showusrdata-/', $method)){
-//		$IDUsr = preg_replace('/showusrdata-/', '', $method);
-//                CmdShowUsrsData($Path, $IDChat, $IDUsr);
-//	}
+	$AvailableCallbacks = array(
+		'showregionalgroup'	=> 'CmdShowRegionalGroupRefers',
+		'showfaq'		=> 'CmdShowFaq',
+		'showmodule'		=> 'CmdShowSubscribeModule'
+	);
 
+	$IDChat = $JSONRequest['callback_query']["message"]["chat"]["id"];
+	$method = $JSONRequest['callback_query']['data'];
+	list($command, $value) = preg_split('/-/', $method);
+	
+	$callbackFound = false;
+	foreach($AvailableCallbacks as $Cmd => $FuncName){
+		if(preg_match('@' . $Cmd  . '@', $command)){
+			$callbackFound = true;
+			$FuncName($Path, $IDChat, $value);
+		}
+	}
 }
 else{
 	$kindRequest = null;
@@ -109,6 +266,8 @@ else{
 	$AvailableCommands = array(
 		'start'			=> 'CmdStart',
 		'gruppiregionali'	=> 'CmdRegionalGroups',
+		'iscrizionesindacato'	=> 'CmdSubscribe',
+		'faq'			=> 'CmdFAQS',
 		'privacy'		=> 'CmdInfoPrivacy',
 		'help'			=> 'CmdHelp',
 

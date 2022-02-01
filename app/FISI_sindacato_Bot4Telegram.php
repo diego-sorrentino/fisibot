@@ -67,6 +67,8 @@ __START_MESSAGE__;
 
 function CmdRegionalGroups($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
+
+	header("Content-Type: application/json");
 	
 	$data = yaml_parse_file('data/gruppiregionali.yaml');
 	$dataArray = $data['referenti']['regione'];
@@ -74,10 +76,11 @@ function CmdRegionalGroups($Path, $IDChat, $Args){
 	
 	$nCols = 2;
 	$nRows = ceil($nData / $nCols);
+	$counter = 0;
 	for($i = 0; $i < $nRows; $i++){
 		$Res[$i] = array();
 		for($j = 0; $j < $nCols; $j++){
-			$arrayID = $i + $j;
+			$arrayID = $counter++;
 			$dataName = $dataArray[$arrayID]['nome'];
 			if(null != $dataName){
 				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showregionalgroup-' . $arrayID);
@@ -123,6 +126,8 @@ __MESSAGE__;
 
 function CmdFAQS($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
+
+	header("Content-Type: application/json");
 	
 	$data = yaml_parse_file('data/faq.yaml');
 	$dataArray = $data['faqs']['comparto'];
@@ -130,10 +135,11 @@ function CmdFAQS($Path, $IDChat, $Args){
 	
 	$nCols = 2;
 	$nRows = ceil($nData / $nCols);
+	$counter = 0;
 	for($i = 0; $i < $nRows; $i++){
 		$Res[$i] = array();
 		for($j = 0; $j < $nCols; $j++){
-			$arrayID = $i + $j;
+			$arrayID = $counter++;
 			$dataName = $dataArray[$arrayID]['nome'];
 			if(null != $dataName){
 				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showfaq-' . $arrayID);
@@ -160,7 +166,7 @@ __MESSAGE__;
 
 function CmdShowFaq($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
-	
+
 	$data = yaml_parse_file('data/faq.yaml');
 	$dataArray = $data['faqs']['comparto'][$Args];
 	
@@ -190,6 +196,8 @@ __MESSAGE__;
 
 function CmdSubscribe($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
+
+	header("Content-Type: application/json");
 	
 	$data = yaml_parse_file('data/moduli.yaml');
 	$dataArray = $data['moduli']['comparto'];
@@ -197,10 +205,11 @@ function CmdSubscribe($Path, $IDChat, $Args){
 	
 	$nCols = 2;
 	$nRows = ceil($nData / $nCols);
+	$counter = 0;
 	for($i = 0; $i < $nRows; $i++){
 		$Res[$i] = array();
 		for($j = 0; $j < $nCols; $j++){
-			$arrayID = $i + $j;
+			$arrayID = $counter++;
 			$dataName = $dataArray[$arrayID]['nome'];
 			if(null != $dataName){
 				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showmodule-' . $arrayID);

@@ -2,23 +2,14 @@
 
 /* Command List for @BotFather
 start - Info sul bot
+gruppiregionali - Gruppi e referenti regionali
+iscrizionesindacato - Moduli di iscrizione
+faq - Frequently Asked Questions
 privacy - Visualizza i dati che vengono memorizzati e dove
 help - aiuto in linea
 */
 
 require_once 'settings/settings.php';
-
-function CmdToDo($Path, $IDChat, $Args = null){
-	error_log(__FUNCTION__);
-
-	$dataTODO= [
-		'chat_id' => $IDChat,
-		'text'	=> 'Comando non trovato. Premi / per i comandi attivi'
-
-	];
-
-	file_get_contents($Path . "/sendMessage?" . http_build_query($dataTODO));
-}
 
 function ReplyWithMessage($Path, $IDChat, $Message){
 	header("Content-Type: application/json");
@@ -33,6 +24,36 @@ function ReplyWithMessage($Path, $IDChat, $Message){
 	echo json_encode($parameters);
 }
 
+function CmdStart ($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+
+	$message =<<<__START_MESSAGE__
+Benvenuto nel BOT realizzato per FISI, al momento non fa quasi nulla
+__START_MESSAGE__;
+
+	ReplyWithMessage($Path, $IDChat, $message);
+}
+
+function CmdHelp($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+
+	$message =<<<__START_MESSAGE__
+Con questo BOT puoi cercare i gruppi e i referenti regionali, scaricare la modulistica di iscrizione, leggere le faq, ecc...
+__START_MESSAGE__;
+
+	ReplyWithMessage($Path, $IDChat, $message);
+}
+
+
+function CmdToDo($Path, $IDChat, $Args = null){
+	error_log(__FUNCTION__);
+
+	$message =<<<__TODO_MESSAGE__
+Comando non trovato. Premi / per i comandi attivi
+__TODO_MESSAGE__;
+
+	ReplyWithMessage($Path, $IDChat, $message);
+}
 
 function CmdInfoPrivacy($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);

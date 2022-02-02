@@ -1,12 +1,12 @@
 <?php
 $Telegram = array(
 	'channel' => array(
-		'name'	=> '@' . getenv('channel_name'),
+		'name'	=> '@' . getenv('CHANNEL_NAME'),
 	),
 	'bot'	=> array (
-		'name'	=> getenv('bot_name'),
+		'name'	=> getenv('BOT_NAME'),
 		'api'	=> 'https://api.telegram.org/bot',
-		'token'	=> getenv('bot_token')
+		'token'	=> getenv('BOT_TOKEN')
 	),
 );
 

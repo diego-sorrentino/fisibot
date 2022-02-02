@@ -156,19 +156,19 @@ function CmdShowStrike($Path, $IDChat, $Args){
 	$adhesionString = (0 === strcmp('--', $dataArray['adesione'])) ? 'Dati ancora non presenti' : $baseDataArray['baseurl'] . $dataArray['adesione'];
 	
 	$dateArray = preg_split('/-/', $dataArray['data']);
-	$dateTimestamp = mktime(0, 0, 0, $dataArray[1] . $dataArray[0] . $dataArray[2]);
-	$today = mktime(0, 0, 0, date("m"), date("d"), date("Y"));
+	$dateString = sprintf("%4d%02d%02d", $dateArray[2], $dateArray[1], $dateArray[0]);
+	$todayString = date('Ymd');
 
-	$statusString = ($dateTimestamp < $today) ? 'PASSATO' : 'ATTIVO';
+	$statusString = ($dateString < $todayString) ? 'PASSATO' : 'ATTIVO';
 
 	$message =<<<__MESSAGE__
-*Data sciopero*: {$dataArray['data']}
-*Settore*: {$dataArray['settore']}
-*Personale coinvolto*: {$dataArray['coinvolgimento']}
-*Tipologia*: {$dataArray['tipologia']}
-*Vedi su cruscotto*: {$baseDataArray['baseurl']}{$dataArray['pageurl']}
-*Adesione*: {$adhesionString}
-*Stato*: {$statusString}
+<strong>Data sciopero</strong>: {$dataArray['data']}
+<strong>Settore</strong>: {$dataArray['settore']}
+<strong>Personale coinvolto</strong>: {$dataArray['coinvolgimento']}
+<strong>Tipologia</strong>: {$dataArray['tipologia']}
+<strong>Vedi su cruscotto</strong>: {$baseDataArray['baseurl']}{$dataArray['pageurl']}
+<strong>Dati adesione</strong>: {$adhesionString}
+<strong>Stato</strong>: {$statusString}
 __MESSAGE__;
 
 	ReplyWithMessage($Path, $IDChat, $message);
@@ -181,13 +181,13 @@ function CmdShowRegionalGroupRefers($Path, $IDChat, $Args){
 	$regionArray = $data['referenti']['regione'][$Args];
 	
 	$message =<<<__MESSAGE__
-Regione: {$regionArray['nome']}
-Canale Telegram: https://t.me/{$regionArray['canale']}
-Referenti:
+<strong>Regione</strong>: {$regionArray['nome']}
+<strong>Canale Telegram</strong>: https://t.me/{$regionArray['canale']}
+<strong>Referenti</strong>:
 
 __MESSAGE__;
 	foreach($regionArray['referente'] as $id => $name)
-		$message .= "- {$name}" . PHP_EOL;
+		$message .= "- <em>{$name}</em>" . PHP_EOL;
 
 	ReplyWithMessage($Path, $IDChat, $message);
 }
@@ -241,10 +241,9 @@ function CmdShowFaq($Path, $IDChat, $Args){
 	
 	foreach($dataArray['faq'] as $id => $data)
 		$message[] =<<<__DATA__
-Faq n. {$data['numero']}
-Domanda: {$data['domanda']}
-Risposta: {$data['risposta']}
-
+<strong>Faq n.</strong>: {$data['numero']}
+<strong>Domanda</strong>: {$data['domanda']}
+<strong>Risposta</strong>: {$data['risposta']}
 __DATA__;
 
 	ReplyWithMessage($Path, $IDChat, implode(PHP_EOL, $message));

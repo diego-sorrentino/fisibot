@@ -4,6 +4,7 @@
 start - Info sul bot
 gruppiregionali - Gruppi e referenti regionali
 iscrizionesindacato - Moduli di iscrizione
+scioperi - scioperi FISI
 faq - Frequently Asked Questions
 privacy - Visualizza i dati che vengono memorizzati e dove
 help - aiuto in linea
@@ -28,7 +29,7 @@ function CmdStart ($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
 
 	$message =<<<__START_MESSAGE__
-Benvenuto nel BOT realizzato per FISI, al momento non fa quasi nulla
+Benvenuto nel BOT realizzato per FISI, al momento sono attive solo le funzionalità per cercare i gruppi e i referenti regionali, scaricare la modulistica di iscrizione, leggere le faq, ecc...
 __START_MESSAGE__;
 
 	ReplyWithMessage($Path, $IDChat, $message);
@@ -46,20 +47,21 @@ __START_MESSAGE__;
 
 
 function CmdToDo($Path, $IDChat, $Args = null){
-	error_log(__FUNCTION__);
-
-	$message =<<<__TODO_MESSAGE__
-Comando non trovato. Premi / per i comandi attivi
-__TODO_MESSAGE__;
-
-	ReplyWithMessage($Path, $IDChat, $message);
+// 2022-02-02: commented out because it responds to every message
+//	error_log(__FUNCTION__);
+//
+//	$message =<<<__TODO_MESSAGE__
+//Comando non trovato. Premi / per i comandi attivi
+//__TODO_MESSAGE__;
+//
+//	ReplyWithMessage($Path, $IDChat, $message);
 }
 
 function CmdInfoPrivacy($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
 
 	$message =<<<__START_MESSAGE__
-Questo bot non mantiene alcun dato privato su chi lo utilizza (almeno per adesso)
+Questo bot non mantiene alcun dato privato su chi lo utilizza 
 __START_MESSAGE__;
 
 	ReplyWithMessage($Path, $IDChat, $message);
@@ -341,6 +343,12 @@ if(!$JSONRequest){
 $Path = $Telegram['bot']['api'] . $Telegram['bot']['token'];
 
 
+if(array_key_exists('my_chat_member', $JSONRequest)){
+	//maybe i'm adding/removing bot from group
+	//so... do nothing
+	exit();
+}
+
 if(array_key_exists('message', $JSONRequest) && array_key_exists('contact', $JSONRequest['message'])){
 //	$IDChat = $JSONRequest['message']["contact"]["user_id"];
 //	$phoneNumber = $JSONRequest['message']["contact"]["phone_number"];
@@ -377,40 +385,40 @@ else{
 	$IDChat = $JSONRequest[$kindRequest]["chat"]["id"];
 	$Sender = $JSONRequest[$kindRequest]['from']['id'];
 	$isGroup = (0 === strcmp('group', $JSONRequest[$kindRequest]["chat"]["type"])) ? true : false;
-	if($isGroup){
-		InviteInPrivateChat($Path, $IDChat);
+
+	if(preg_match('/ /', $JSONRequest[$kindRequest]["text"])){
+		$Line = preg_split('/ /', $JSONRequest[$kindRequest]["text"]);
+		$Command = $Line[0];
+		$Args = array_slice($Line, 1);
 	}
 	else{
-		if(preg_match('/ /', $JSONRequest[$kindRequest]["text"])){
-			$Line = preg_split('/ /', $JSONRequest[$kindRequest]["text"]);
-			$Command = $Line[0];
-			$Args = array_slice($Line, 1);
-		}
-		else{
-			$Args = null;
-			$Command = $JSONRequest[$kindRequest]["text"];
-		}
-		$AvailableCommands = array(
-			'start'			=> 'CmdStart',
-			'gruppiregionali'	=> 'CmdRegionalGroups',
-			'iscrizionesindacato'	=> 'CmdSubscribe',
-			'scioperi'		=> 'CmdStrikes',
-			'faq'			=> 'CmdFAQS',
-			'privacy'		=> 'CmdInfoPrivacy',
-			'help'			=> 'CmdHelp',
-
-		);
-		$cmdFound = false;
-		foreach($AvailableCommands as $Cmd => $FuncName){
-			if(preg_match('@/' . $Cmd  . '@', $Command)){
-				$cmdFound = true;
-				$FuncName($Path, $IDChat, $Args);
-			}
-		}
-		
-		if(!$cmdFound)
-			CmdToDo($Path, $IDChat);
+		$Args = null;
+		$Command = $JSONRequest[$kindRequest]["text"];
 	}
+	$AvailableCommands = array(
+		'start'			=> 'CmdStart',
+		'gruppiregionali'	=> 'CmdRegionalGroups',
+		'iscrizionesindacato'	=> 'CmdSubscribe',
+		'scioperi'		=> 'CmdStrikes',
+		'faq'			=> 'CmdFAQS',
+		'privacy'		=> 'CmdInfoPrivacy',
+		'help'			=> 'CmdHelp',
+
+	);
+	$cmdFound = false;
+	foreach($AvailableCommands as $Cmd => $FuncName){
+		if(preg_match('@/' . $Cmd  . '@', $Command)){
+			$cmdFound = true;
+			if($isGroup)
+				InviteInPrivateChat($Path, $IDChat);
+			else
+				$FuncName($Path, $IDChat, $Args);
+		}
+	}
+	
+	if(!$cmdFound)
+		CmdToDo($Path, $IDChat);
+	
 
 }
 ?>

@@ -81,8 +81,8 @@ function CmdRegionalGroups($Path, $IDChat, $Args){
 		$Res[$i] = array();
 		for($j = 0; $j < $nCols; $j++){
 			$arrayID = $counter++;
-			$dataName = $dataArray[$arrayID]['nome'];
-			if(null != $dataName){
+			if(array_key_exists($arrayID, $dataArray)){
+				$dataName = $dataArray[$arrayID]['nome'];
 				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showregionalgroup-' . $arrayID);
 			}
 		}
@@ -103,6 +103,75 @@ __MESSAGE__;
 	);
 
 	echo json_encode($parameters);
+}
+
+function CmdStrikes($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+
+	header("Content-Type: application/json");
+	
+	$data = yaml_parse_file('data/scioperi.yaml');
+	$baseDataArray = $data['cruscotto'];
+	$dataArray = $data['cruscotto']['scioperi'];
+	$nData = count($dataArray);
+	
+	$nCols = 2;
+	$nRows = ceil($nData / $nCols);
+	$counter = 0;
+	for($i = 0; $i < $nRows; $i++){
+		$Res[$i] = array();
+		for($j = 0; $j < $nCols; $j++){
+			$arrayID = $counter++;
+			if(array_key_exists($arrayID, $dataArray)){
+				$dataName = $dataArray[$arrayID]['data'];
+				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showstrike-' . $arrayID);
+			}
+		}
+	}
+
+	$keyboard = ['inline_keyboard' => $Res ];
+
+	$message =<<<__MESSAGE__
+Dati presi dal {$baseDataArray['nome']}:
+{$baseDataArray['baseurl']}{$baseDataArray['pageurl']} 
+__MESSAGE__;
+
+	$parameters = array(
+		'chat_id' => $IDChat, 
+		'reply_markup' => $keyboard,
+		"text" => $message,
+		"method" => "sendMessage",
+		'parse_mode' => 'HTML',
+	);
+
+	echo json_encode($parameters);
+}
+
+function CmdShowStrike($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+	
+	$data = yaml_parse_file('data/scioperi.yaml');
+	$baseDataArray = $data['cruscotto'];
+	$dataArray = $data['cruscotto']['scioperi'][$Args];
+	$adhesionString = (0 === strcmp('--', $dataArray['adesione'])) ? 'Dati ancora non presenti' : $baseDataArray['baseurl'] . $dataArray['adesione'];
+	
+	$dateArray = preg_split('/-/', $dataArray['data']);
+	$dateTimestamp = mktime(0, 0, 0, $dataArray[1] . $dataArray[0] . $dataArray[2]);
+	$today = mktime(0, 0, 0, date("m"), date("d"), date("Y"));
+
+	$statusString = ($dateTimestamp < $today) ? 'PASSATO' : 'ATTIVO';
+
+	$message =<<<__MESSAGE__
+*Data sciopero*: {$dataArray['data']}
+*Settore*: {$dataArray['settore']}
+*Personale coinvolto*: {$dataArray['coinvolgimento']}
+*Tipologia*: {$dataArray['tipologia']}
+*Vedi su cruscotto*: {$baseDataArray['baseurl']}{$dataArray['pageurl']}
+*Adesione*: {$adhesionString}
+*Stato*: {$statusString}
+__MESSAGE__;
+
+	ReplyWithMessage($Path, $IDChat, $message);
 }
 
 function CmdShowRegionalGroupRefers($Path, $IDChat, $Args){
@@ -140,8 +209,8 @@ function CmdFAQS($Path, $IDChat, $Args){
 		$Res[$i] = array();
 		for($j = 0; $j < $nCols; $j++){
 			$arrayID = $counter++;
-			$dataName = $dataArray[$arrayID]['nome'];
-			if(null != $dataName){
+			if(array_key_exists($arrayID, $dataArray)){
+				$dataName = $dataArray[$arrayID]['nome'];
 				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showfaq-' . $arrayID);
 			}
 		}
@@ -220,8 +289,8 @@ function CmdSubscribe($Path, $IDChat, $Args){
 		$Res[$i] = array();
 		for($j = 0; $j < $nCols; $j++){
 			$arrayID = $counter++;
-			$dataName = $dataArray[$arrayID]['nome'];
-			if(null != $dataName){
+			if(array_key_exists($arrayID, $dataArray)){
+				$dataName = $dataArray[$arrayID]['nome'];
 				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'showmodule-' . $arrayID);
 			}
 		}
@@ -284,7 +353,8 @@ elseif(array_key_exists('callback_query', $JSONRequest)){
 	$AvailableCallbacks = array(
 		'showregionalgroup'	=> 'CmdShowRegionalGroupRefers',
 		'showfaq'		=> 'CmdShowFaq',
-		'showmodule'		=> 'CmdShowSubscribeModule'
+		'showmodule'		=> 'CmdShowSubscribeModule',
+		'showstrike'		=> 'CmdShowStrike'
 	);
 	$IDChat = $JSONRequest['callback_query']["message"]["chat"]["id"];
 	$method = $JSONRequest['callback_query']['data'];
@@ -325,6 +395,7 @@ else{
 			'start'			=> 'CmdStart',
 			'gruppiregionali'	=> 'CmdRegionalGroups',
 			'iscrizionesindacato'	=> 'CmdSubscribe',
+			'scioperi'		=> 'CmdStrikes',
 			'faq'			=> 'CmdFAQS',
 			'privacy'		=> 'CmdInfoPrivacy',
 			'help'			=> 'CmdHelp',

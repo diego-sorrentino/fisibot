@@ -186,12 +186,22 @@ function CmdShowSubscribeModule($Path, $IDChat, $Args){
 	
 	$data = yaml_parse_file('data/moduli.yaml');
 	$dataArray = $data['moduli']['comparto'][$Args];
-//TODO: Return message with PDF in attach	
-	$message =<<<__MESSAGE__
-Filename: {$dataArray['filename']}
-__MESSAGE__;
 
-	ReplyWithMessage($Path, $IDChat, $message);
+	$url = $Path . "/sendDocument?chat_id=" . $IDChat;
+
+	$ch = curl_init(); 
+	curl_setopt($ch, CURLOPT_URL, $url); 
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+	curl_setopt($ch, CURLOPT_POST, 1);
+
+	$cFile = new CURLFile('moduli/' . $dataArray['filename']);
+	$cFile->setMimeType = 'multipart/form-data';
+	curl_setopt($ch, CURLOPT_POSTFIELDS, [
+		"document" => $cFile,
+		'caption' => 'Modulo iscrizione ' . $dataArray['nome']
+	    ]);
+	$output = curl_exec($ch);
+	curl_close($ch);
 }
 
 function CmdSubscribe($Path, $IDChat, $Args){
@@ -261,7 +271,6 @@ elseif(array_key_exists('callback_query', $JSONRequest)){
 		'showfaq'		=> 'CmdShowFaq',
 		'showmodule'		=> 'CmdShowSubscribeModule'
 	);
-
 	$IDChat = $JSONRequest['callback_query']["message"]["chat"]["id"];
 	$method = $JSONRequest['callback_query']['data'];
 	list($command, $value) = preg_split('/-/', $method);

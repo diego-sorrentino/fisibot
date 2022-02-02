@@ -6,7 +6,7 @@ services:
     build:
       context: ./web/
       dockerfile: Dockerfile
-    image: web:0.1
+    image: fisibot/web:0.1
     environment:
       - WWW_PATH=${WWW_PATH}
       - DNS_SERVER_NAME=${DNS_SERVER_NAME}
@@ -30,7 +30,7 @@ services:
     build:
       context: ./php/
       dockerfile: Dockerfile
-    image: app:0.1
+    image: fisibot/app:0.1
     environment:
       - WWW_PATH=${WWW_PATH}
       - BOT_USERNAME=${BOT_USERNAME}

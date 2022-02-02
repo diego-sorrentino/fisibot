@@ -244,6 +244,21 @@ __MESSAGE__;
 	echo json_encode($parameters);
 }
 
+
+function InviteInPrivateChat($Path, $IDChat){
+	error_log(__FUNCTION__);
+
+	global $Telegram;
+
+	$message =<<<__START_MESSAGE__
+Ciao, clicca @{$Telegram['bot']['name']} per venire in chat privata con il risponditore automatico
+__START_MESSAGE__;
+
+	ReplyWithMessage($Path, $IDChat, $message);
+}
+
+
+
 $JSONRequest = json_decode(file_get_contents("php://input"), TRUE);
 
 if(DEBUG)
@@ -292,35 +307,40 @@ else{
 
 	$IDChat = $JSONRequest[$kindRequest]["chat"]["id"];
 	$Sender = $JSONRequest[$kindRequest]['from']['id'];
-
-	if(preg_match('/ /', $JSONRequest[$kindRequest]["text"])){
-		$Line = preg_split('/ /', $JSONRequest[$kindRequest]["text"]);
-		$Command = $Line[0];
-		$Args = array_slice($Line, 1);
+	$isGroup = (0 === strcmp('group', $JSONRequest[$kindRequest]["chat"]["type"])) ? true : false;
+	if($isGroup){
+		InviteInPrivateChat($Path, $IDChat);
 	}
 	else{
-		$Args = null;
-		$Command = $JSONRequest[$kindRequest]["text"];
-	}
-	$AvailableCommands = array(
-		'start'			=> 'CmdStart',
-		'gruppiregionali'	=> 'CmdRegionalGroups',
-		'iscrizionesindacato'	=> 'CmdSubscribe',
-		'faq'			=> 'CmdFAQS',
-		'privacy'		=> 'CmdInfoPrivacy',
-		'help'			=> 'CmdHelp',
-
-	);
-	$cmdFound = false;
-	foreach($AvailableCommands as $Cmd => $FuncName){
-		if(preg_match('@/' . $Cmd  . '@', $Command)){
-			$cmdFound = true;
-			$FuncName($Path, $IDChat, $Args);
+		if(preg_match('/ /', $JSONRequest[$kindRequest]["text"])){
+			$Line = preg_split('/ /', $JSONRequest[$kindRequest]["text"]);
+			$Command = $Line[0];
+			$Args = array_slice($Line, 1);
 		}
+		else{
+			$Args = null;
+			$Command = $JSONRequest[$kindRequest]["text"];
+		}
+		$AvailableCommands = array(
+			'start'			=> 'CmdStart',
+			'gruppiregionali'	=> 'CmdRegionalGroups',
+			'iscrizionesindacato'	=> 'CmdSubscribe',
+			'faq'			=> 'CmdFAQS',
+			'privacy'		=> 'CmdInfoPrivacy',
+			'help'			=> 'CmdHelp',
+
+		);
+		$cmdFound = false;
+		foreach($AvailableCommands as $Cmd => $FuncName){
+			if(preg_match('@/' . $Cmd  . '@', $Command)){
+				$cmdFound = true;
+				$FuncName($Path, $IDChat, $Args);
+			}
+		}
+		
+		if(!$cmdFound)
+			CmdToDo($Path, $IDChat);
 	}
-	
-	if(!$cmdFound)
-		CmdToDo($Path, $IDChat);
 
 }
 ?>

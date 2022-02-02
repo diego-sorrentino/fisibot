@@ -15,7 +15,7 @@ services:
       - CERT_PEM_FILENAME=${CERT_PEM_FILENAME}
       - PHP_SERVER=${PHP_SERVER}
     ports:
-      - "443:443"
+      - "8080:80"
     depends_on:
       - php
     networks:

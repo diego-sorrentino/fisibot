@@ -238,17 +238,68 @@ __MESSAGE__;
 function CmdShowFaq($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
 
+	header("Content-Type: application/json");
+
 	$data = yaml_parse_file('data/faq.yaml');
 	$dataArray = $data['faqs']['comparto'][$Args];
-	
-	foreach($dataArray['faq'] as $id => $data)
+
+// create keyboard
+	$nData = count($dataArray['faq']);
+	$nCols = 3;
+	$nRows = ceil($nData / $nCols);
+	$counter = 0;
+	for($i = 0; $i < $nRows; $i++){
+		$Res[$i] = array();
+		for($j = 0; $j < $nCols; $j++){
+			$arrayID = $counter++;
+			if(array_key_exists($arrayID, $dataArray['faq'])){
+				$faqIndex = $arrayID + 1;
+				$dataName = 'FAQ n. ' . $faqIndex;
+				$Res[$i][$j] = array('text' => $dataName, 'callback_data' => 'viewfaq-' . $Args . '_' . $arrayID);
+			}
+		}
+	}
+
+	$keyboard = ['inline_keyboard' => $Res ];
+
+
+	$message = array();
+	foreach($dataArray['faq'] as $id => $data){
+		$faqIndex = $id + 1;
 		$message[] =<<<__DATA__
-<strong>Faq n.</strong>: {$data['numero']}
+<strong>Faq n.</strong>: {$faqIndex}
 <strong>Domanda</strong>: {$data['domanda']}
-<strong>Risposta</strong>: {$data['risposta']}
+__DATA__;
+	}
+
+	$parameters = array(
+		'chat_id' => $IDChat, 
+		'reply_markup' => $keyboard,
+		"text" => implode(PHP_EOL, $message),
+		"method" => "sendMessage",
+		'parse_mode' => 'HTML',
+	);
+
+	echo json_encode($parameters);
+}
+
+function CmdViewFaq($Path, $IDChat, $Args){
+	error_log(__FUNCTION__);
+
+	//$Args here is xx_yy
+	list($sectionIndex, $faqArrayIndex) = preg_split('/_/', $Args);
+
+	$data = yaml_parse_file('data/faq.yaml');
+	$dataArray = $data['faqs']['comparto'][$sectionIndex]['faq'][$faqArrayIndex];
+	$faqIndex = $faqArrayIndex + 1;
+	
+	$message =<<<__DATA__
+<strong>Faq n.</strong>: {$faqIndex}
+<strong>Domanda</strong>: {$dataArray['domanda']}
+<strong>Risposta</strong>: {$dataArray['risposta']}
 __DATA__;
 
-	ReplyWithMessage($Path, $IDChat, implode(PHP_EOL, $message));
+	ReplyWithMessage($Path, $IDChat, $message);
 }
 
 function CmdShowSubscribeModule($Path, $IDChat, $Args){
@@ -360,6 +411,7 @@ elseif(array_key_exists('callback_query', $JSONRequest)){
 	$AvailableCallbacks = array(
 		'showregionalgroup'	=> 'CmdShowRegionalGroupRefers',
 		'showfaq'		=> 'CmdShowFaq',
+		'viewfaq'		=> 'CmdViewFaq',
 		'showmodule'		=> 'CmdShowSubscribeModule',
 		'showstrike'		=> 'CmdShowStrike'
 	);

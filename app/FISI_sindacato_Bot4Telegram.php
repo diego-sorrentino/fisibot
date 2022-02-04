@@ -304,9 +304,18 @@ __DATA__;
 
 function CmdShowSubscribeModule($Path, $IDChat, $Args){
 	error_log(__FUNCTION__);
+
+	$lastFormVersion = '1.01';
+	$formDir = 'moduli';
 	
 	$data = yaml_parse_file('data/moduli.yaml');
 	$dataArray = $data['moduli']['comparto'][$Args];
+
+	$formFilePath = sprintf('%s/%s_%s.pdf',
+		$formDir, 
+		$dataArray['filename'],
+		$lastFormVersion
+	);
 
 	$url = $Path . "/sendDocument?chat_id=" . $IDChat;
 
@@ -315,7 +324,7 @@ function CmdShowSubscribeModule($Path, $IDChat, $Args){
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
 	curl_setopt($ch, CURLOPT_POST, 1);
 
-	$cFile = new CURLFile('moduli/' . $dataArray['filename']);
+	$cFile = new CURLFile($formFilePath);
 	$cFile->setMimeType = 'multipart/form-data';
 	curl_setopt($ch, CURLOPT_POSTFIELDS, [
 		"document" => $cFile,
